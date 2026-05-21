@@ -1,0 +1,103 @@
+name: Update Pokemon Prices
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_pages:
+        description: "Maximum pages to scrape"
+        required: false
+        default: "700"
+      page_size:
+        description: "Products per page, max 48"
+        required: false
+        default: "48"
+      delay_ms:
+        description: "Delay between TCGplayer requests"
+        required: false
+        default: "10000"
+  schedule:
+    - cron: "0 */12 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    env:
+      TCGPLAYER_MAX_PAGES: ${{ github.event.inputs.max_pages || '700' }}
+      TCGPLAYER_PAGE_SIZE: ${{ github.event.inputs.page_size || '48' }}
+      TCGPLAYER_DELAY_MS: ${{ github.event.inputs.delay_ms || '10000' }}
+      GIT_COMMIT_AUTHOR_NAME: Cristian Bravo
+      GIT_COMMIT_AUTHOR_EMAIL: ktc1cristian@gmail.com
+      GOOGLE_DRIVE_FOLDER: ${{ vars.GOOGLE_DRIVE_FOLDER || 'tcgplayer-pokemon-prices' }}
+      RCLONE_CONFIG_DRIVE: ${{ secrets.RCLONE_CONFIG_DRIVE }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate project
+        run: npm run qa
+
+      - name: Run scraper
+        run: |
+          npx tsx src/cli.ts scrape \
+            --max-pages "$TCGPLAYER_MAX_PAGES" \
+            --page-size "$TCGPLAYER_PAGE_SIZE" \
+            --delay-ms "$TCGPLAYER_DELAY_MS" \
+            --no-raw
+
+      - name: Publish latest CSV
+        shell: bash
+        run: |
+          latest_csv="$(find data/exports -type f -name 'pokemon-prices.csv' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)"
+          if [ -z "$latest_csv" ]; then
+            echo "No CSV export was generated."
+            exit 1
+          fi
+          cp "$latest_csv" pokemon-prices.csv
+          echo "Latest CSV copied from $latest_csv"
+
+      - name: Upload CSV artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pokemon-prices-csv
+          path: pokemon-prices.csv
+          if-no-files-found: error
+
+      - name: Install rclone
+        if: ${{ env.RCLONE_CONFIG_DRIVE != '' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone
+
+      - name: Upload CSV to Google Drive
+        if: ${{ env.RCLONE_CONFIG_DRIVE != '' }}
+        run: |
+          mkdir -p "$HOME/.config/rclone"
+          printf '%s' "$RCLONE_CONFIG_DRIVE" > "$HOME/.config/rclone/rclone.conf"
+          rclone mkdir "drive:${GOOGLE_DRIVE_FOLDER}"
+          rclone copy pokemon-prices.csv "drive:${GOOGLE_DRIVE_FOLDER}" --drive-use-trash=false
+
+      - name: Commit CSV
+        run: |
+          git config user.name "$GIT_COMMIT_AUTHOR_NAME"
+          git config user.email "$GIT_COMMIT_AUTHOR_EMAIL"
+          git add pokemon-prices.csv
+          if git diff --cached --quiet; then
+            echo "no changes"
+            exit 0
+          fi
+          git commit -m "update pokemon prices"
+          git push

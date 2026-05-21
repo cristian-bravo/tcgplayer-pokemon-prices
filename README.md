@@ -50,6 +50,30 @@ npm run dev -- scrape -- --set sv-prismatic-evolutions --rarity "Special Illustr
 npm run dev -- scrape -- --dry-run
 ```
 
+## GitHub Actions y Drive
+
+El workflow [.github/workflows/update-pokemon-prices.yml](.github/workflows/update-pokemon-prices.yml) ejecuta el scraper cada 12 horas y tambien manualmente desde `workflow_dispatch`.
+
+La accion:
+
+- valida el proyecto con `npm run qa`;
+- ejecuta el scraper;
+- copia el ultimo export a [pokemon-prices.csv](pokemon-prices.csv);
+- sube ese CSV como artifact de GitHub Actions;
+- commitea `pokemon-prices.csv` para registrar una actividad en Git;
+- sube el CSV a Google Drive si existe el secret `RCLONE_CONFIG_DRIVE`.
+
+Para que el commit cuente como actividad de tu perfil, el workflow usa:
+
+```text
+GIT_COMMIT_AUTHOR_NAME=Cristian Bravo
+GIT_COMMIT_AUTHOR_EMAIL=ktc1cristian@gmail.com
+```
+
+Ese email debe estar verificado en tu cuenta de GitHub.
+
+Para conectar Drive, crea en el repo el secret `RCLONE_CONFIG_DRIVE` con el contenido de una configuracion valida de `rclone` para un remote llamado `drive`. Opcionalmente define la variable de repo `GOOGLE_DRIVE_FOLDER`; por defecto usa `tcgplayer-pokemon-prices`.
+
 ## Alcance de busqueda
 
 El scraper debe consultar la API de busqueda de TCGplayer con:
@@ -67,6 +91,12 @@ data/raw/<runId>/page-0001.json
 data/normalized/<runId>/pokemon-products.json
 data/exports/<runId>/pokemon-prices.csv
 data/manifests/<runId>/manifest.json
+```
+
+El archivo estable para consumo externo es:
+
+```text
+pokemon-prices.csv
 ```
 
 La documentacion tecnica esta en:

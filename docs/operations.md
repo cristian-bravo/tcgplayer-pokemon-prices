@@ -43,6 +43,43 @@ npm run dev -- scrape -- --dry-run
 npm run dev -- scrape -- --set sv-prismatic-evolutions --rarity "Special Illustration Rare"
 ```
 
+## GitHub Actions
+
+El workflow `.github/workflows/update-pokemon-prices.yml` corre cada 12 horas y se puede disparar manualmente.
+
+Entradas manuales:
+
+| Input | Default | Descripcion |
+| --- | --- | --- |
+| `max_pages` | `700` | Limite de paginas a consultar; cubre el catalogo Pokemon actual con `page_size=48`. |
+| `page_size` | `48` | Productos por pagina, maximo aceptado por el proyecto. |
+| `delay_ms` | `10000` | Espera entre requests a TCGplayer. |
+
+El workflow commitea `pokemon-prices.csv` en la rama principal. Como el CSV incluye `scrapedAt`, normalmente cada ejecucion genera un cambio y crea una actividad de Git.
+
+Para que esa actividad se atribuya al perfil correcto, el email configurado en el workflow debe estar verificado en GitHub:
+
+```text
+ktc1cristian@gmail.com
+```
+
+## Google Drive
+
+La subida a Drive es opcional y usa `rclone`.
+
+Configurar en GitHub:
+
+| Nombre | Tipo | Descripcion |
+| --- | --- | --- |
+| `RCLONE_CONFIG_DRIVE` | Secret | Contenido completo de `rclone.conf` con un remote llamado `drive`. |
+| `GOOGLE_DRIVE_FOLDER` | Variable | Carpeta destino en Drive. Default: `tcgplayer-pokemon-prices`. |
+
+Ejemplo de destino:
+
+```text
+drive:tcgplayer-pokemon-prices/pokemon-prices.csv
+```
+
 ## Exportaciones
 
 El comando `scrape` genera las exportaciones directamente:
@@ -50,6 +87,7 @@ El comando `scrape` genera las exportaciones directamente:
 Salidas:
 
 ```text
+pokemon-prices.csv
 data/raw/<runId>/page-0001.json
 data/normalized/<runId>/pokemon-products.json
 data/exports/<runId>/pokemon-prices.csv
