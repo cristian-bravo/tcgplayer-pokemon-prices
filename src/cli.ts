@@ -50,6 +50,7 @@ program
   .option("--set <value>", "TCGplayer set URL value, for example sv-prismatic-evolutions.", collect, [])
   .option("--rarity <value>", "Rarity label, for example Special Illustration Rare.", collect, [])
   .option("--card-type <value>", "Card type label, for example Pokemon or Supporter.", collect, [])
+  .option("--partition-by-set", "Scrape each Pokemon set separately to avoid TCGplayer's high-offset search limit.", false)
   .addOption(new Option("--no-raw", "Do not persist raw search responses."))
   .option("--dry-run", "Print the first request payload without making network calls.", false)
   .option("--verbose", "Enable verbose logging.", false)
@@ -69,6 +70,7 @@ program
       retryAttempts: commandOptions.retryAttempts ?? env.TCGPLAYER_RETRY_ATTEMPTS,
       includeRaw: commandOptions.raw,
       dryRun: commandOptions.dryRun,
+      partitionBySet: commandOptions.partitionBySet,
       filters: {
         setName: commandOptions.set,
         rarityName: commandOptions.rarity,
@@ -89,4 +91,3 @@ program.parseAsync().catch((error: unknown) => {
   console.error(message);
   process.exitCode = 1;
 });
-

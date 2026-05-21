@@ -6,7 +6,7 @@ on:
       max_pages:
         description: "Maximum pages to scrape"
         required: false
-        default: "700"
+        default: "800"
       page_size:
         description: "Products per page, max 48"
         required: false
@@ -16,7 +16,7 @@ on:
         required: false
         default: "10000"
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: "0 5 */2 * *"
 
 permissions:
   contents: write
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TCGPLAYER_MAX_PAGES: ${{ github.event.inputs.max_pages || '700' }}
+      TCGPLAYER_MAX_PAGES: ${{ github.event.inputs.max_pages || '800' }}
       TCGPLAYER_PAGE_SIZE: ${{ github.event.inputs.page_size || '48' }}
       TCGPLAYER_DELAY_MS: ${{ github.event.inputs.delay_ms || '10000' }}
       GIT_COMMIT_AUTHOR_NAME: Cristian Bravo
@@ -56,6 +56,7 @@ jobs:
             --max-pages "$TCGPLAYER_MAX_PAGES" \
             --page-size "$TCGPLAYER_PAGE_SIZE" \
             --delay-ms "$TCGPLAYER_DELAY_MS" \
+            --partition-by-set \
             --no-raw
 
       - name: Publish latest CSV

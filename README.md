@@ -46,18 +46,20 @@ Opciones utiles:
 
 ```bash
 npm run dev -- scrape -- --max-pages 2 --page-size 24
+npm run dev -- scrape -- --partition-by-set --max-pages 800 --page-size 48
 npm run dev -- scrape -- --set sv-prismatic-evolutions --rarity "Special Illustration Rare"
 npm run dev -- scrape -- --dry-run
 ```
 
 ## GitHub Actions y Drive
 
-El workflow [.github/workflows/update-pokemon-prices.yml](.github/workflows/update-pokemon-prices.yml) ejecuta el scraper cada 12 horas y tambien manualmente desde `workflow_dispatch`.
+El workflow [.github/workflows/update-pokemon-prices.yml](.github/workflows/update-pokemon-prices.yml) ejecuta el scraper cada 48 horas y tambien manualmente desde `workflow_dispatch`.
 
 La accion:
 
 - valida el proyecto con `npm run qa`;
 - ejecuta el scraper;
+- usa `--partition-by-set` para cubrir todos los resultados aunque TCGplayer rechace offsets cercanos a `10000`;
 - copia el ultimo export a [pokemon-prices.csv](pokemon-prices.csv);
 - sube ese CSV como artifact de GitHub Actions;
 - commitea `pokemon-prices.csv` para registrar una actividad en Git;
