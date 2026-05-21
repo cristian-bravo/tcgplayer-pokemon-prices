@@ -1,0 +1,46 @@
+{
+  "name": "tcgplayer-pokemon-prices",
+  "version": "1.0.0",
+  "description": "Independent TCGplayer Pokemon product and price scraper.",
+  "type": "module",
+  "main": "dist/cli.js",
+  "bin": {
+    "tcgplayer-pokemon-prices": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "scrape": "tsx src/cli.ts scrape",
+    "scrape:sample": "tsx src/cli.ts scrape --max-pages 1 --page-size 5 --delay-ms 0",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "start": "node dist/cli.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src tests",
+    "qa": "npm run typecheck && npm test && npm run build"
+  },
+  "keywords": [
+    "tcgplayer",
+    "pokemon",
+    "scraper",
+    "prices"
+  ],
+  "author": "Cristian Bravo",
+  "license": "ISC",
+  "dependencies": {
+    "bottleneck": "^2.19.5",
+    "commander": "^14.0.3",
+    "dotenv": "^17.4.2",
+    "pino": "^10.3.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.1",
+    "eslint": "^10.4.0",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.4",
+    "vitest": "^4.1.7"
+  }
+}
